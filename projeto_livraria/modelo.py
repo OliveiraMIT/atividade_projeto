@@ -16,13 +16,26 @@ from langchain.chat_models import init_chat_model
 load_dotenv(Path(__file__).parent / ".env")
 
 def carregar_modelo():
-    nome = os.getenv("MODELO")
-    if not nome:
+    #nome = os.getenv("MODELO")
+    nome_completo = os.getenv("MODELO")
+    if not nome_completo:
         raise SystemExit(
-            'Defina a variável MODELO no .env, ex.: MODELO="openai:gpt-4.1" '
-            "(e a chave de API do provedor)."
+            'Defina a variável MODELO no .env, ex.: MODELO="ollama:qwen3:4b"'
+            #"(e a chave de API do provedor)."
         )
-    return init_chat_model(nome, temperature=0)
+    #return init_chat_model(nome, temperature=0)
+    if ":" not in nome_completo:
+        raise SystemExit(
+            'MODELO deve ter o formato "provedor:modelo", ex.: MODELO="ollama:qwen3:4b"'
+        )
+    provedor, modelo = nome_completo.split(":", 1)
+    kwargs = {"temperature": 0}
+    if provedor.lower() == "ollama":
+        base_url = os.getenv("LOCALHOST")
+        if base_url:
+            kwargs["base_url"] = base_url
+
+    return init_chat_model(modelo, model_provider=provedor, **kwargs)
 
 def texto(msg):
     """Conteúdo de uma mensagem como string."""
